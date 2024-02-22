@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  email-postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: "emailHandler"
+      POSTGRES_PASSWORD: "admin"
+      PGDATA: /var/lib/postgresql/data/psql
+    ports:
+      - "15432:5432"
+    volumes:
+      - /Users/crys/dev/docker/postgresql:/var/lib/postgresql/data
+    networks:
+      - email-postgres-network
+
+  email-pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "funcionario@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - "16543:80"
+    depends_on:
+      - email-postgres
+    networks:
+      - email-postgres-network
+
+networks:
+  email-postgres-network:
+    driver: bridge
