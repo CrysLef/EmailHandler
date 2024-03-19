@@ -1,9 +1,29 @@
 
 services:
   email-postgres:
+    container_name: email-postgres
     image: 'postgres:16-alpine3.18'
     environment:
       POSTGRES_DB: "email_handler"
       POSTGRES_PASSWORD: "admin"
     ports:
-      - "15432:5432"
+      - "5432:5432"
+    networks:
+      - email-net
+
+  email-ms:
+    build: .
+    environment:
+      GMAIL_SENDER_USER: ${GMAIL_SENDER_USER}
+      GMAIL_SENDER_PASSW: ${GMAIL_SENDER_PASSW}
+    ports:
+      - '8081:8081'
+    depends_on:
+      - email-postgres
+    env_file: .env
+    networks:
+      - email-net
+
+networks:
+  email-net:
+    driver: bridge
