@@ -1,16 +1,12 @@
 package br.com.cryslefundes.emailHandler.infra.JavaMailSender;
 
 import br.com.cryslefundes.emailHandler.adapters.EmailSenderGateway;
-import br.com.cryslefundes.emailHandler.core.entity.Email;
-import br.com.cryslefundes.emailHandler.core.enums.EmailStatus;
-import br.com.cryslefundes.emailHandler.core.exception.EmailServiceException;
+import br.com.cryslefundes.emailHandler.core.dto.EmailDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-
-import static java.lang.String.format;
 
 @Service
 public class GmailSender implements EmailSenderGateway {
@@ -22,17 +18,12 @@ public class GmailSender implements EmailSenderGateway {
     }
 
     @Override
-    public void sendEmail(Email email) {
+    public void sendEmail(EmailDTO dto) throws MailException {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email.getEmailTo());
-        message.setSubject(email.getSubject());
-        message.setText(email.getBody());
-        try {
-            mailSender.send(message);
-            email.setEmailStatus(EmailStatus.SENT);
-        } catch (MailException e) {
-            email.setEmailStatus(EmailStatus.ERROR);
-            throw new EmailServiceException(format("Error sending e-mail to: %s - cause: %s", email.getEmailTo(), e.getCause()));
-        }
+        message.setTo(dto.emailTo());
+        message.setSubject(dto.subject());
+        message.setText(dto.body());
+
+        mailSender.send(message);
     }
 }

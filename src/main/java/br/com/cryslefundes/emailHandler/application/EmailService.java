@@ -1,16 +1,14 @@
 package br.com.cryslefundes.emailHandler.application;
 
 import br.com.cryslefundes.emailHandler.adapters.EmailSenderGateway;
+import br.com.cryslefundes.emailHandler.core.dto.EmailDTO;
 import br.com.cryslefundes.emailHandler.core.entity.Email;
-import br.com.cryslefundes.emailHandler.core.enums.EmailStatus;
 import br.com.cryslefundes.emailHandler.core.exception.EmailServiceException;
 import br.com.cryslefundes.emailHandler.core.useCase.EmailUseCase;
 import br.com.cryslefundes.emailHandler.repository.EmailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 import static java.lang.String.format;
 
@@ -20,9 +18,6 @@ public class EmailService implements EmailUseCase {
     private final EmailSenderGateway emailSenderGateway;
     private final EmailRepository repository;
 
-    @Value("${GMAIL_SENDER_USER}")
-    String emailFrom;
-
     @Autowired
     public EmailService(EmailSenderGateway emailSenderGateway, EmailRepository repository) {
         this.emailSenderGateway = emailSenderGateway;
@@ -30,13 +25,16 @@ public class EmailService implements EmailUseCase {
     }
 
     @Override
-    public void sendEmail(Email email) {
-        email.setSendDate(LocalDateTime.now());
-        email.setEmailFrom(emailFrom);
+    public void sendEmail(EmailDTO dto) {
+        var email = new Email(dto);
         try {
-            this.emailSenderGateway.sendEmail(email);
+            emailSenderGateway.sendEmail(dto);
+            email.markEmailStatusAsSent();
+        } catch (MailException e) {
+            email.markEmailStatusAsError();
+            throw new EmailServiceException(format("Error sending e-mail to: %s - cause: %s", dto.emailTo(), e.getMessage()));
         } finally {
-            this.repository.save(email);
+            repository.save(email);
         }
     }
 }
